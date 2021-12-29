@@ -1,13 +1,15 @@
+# System
 import time
 import random
 import sys
-
+# Installed
 from selenium import webdriver
 from selenium.webdriver.common.keys import Keys
 from selenium.webdriver.common.by import By
+from selenium.webdriver.firefox.options import Options
+from selenium.webdriver.common.by import By
 from selenium.webdriver.support.ui import WebDriverWait
 from selenium.webdriver.support import expected_conditions as EC
-
 import xlrd
 from xlrd import open_workbook
 import xlutils
@@ -34,29 +36,32 @@ class Identity:
         print(self.username)
         print(self.password)
 
-def startDriver():
-    return webdriver.Firefox()
+def startDriver(headless=False):
+	if headless:
+		fireFoxOptions = Options()
+		fireFoxOptions.headless = True
+		return webdriver.Firefox(options=fireFoxOptions)
+	else:
+		return webdriver.Firefox()
 
 def getIdentity(driver):
     try:
-        details_container = driver.find_element_by_id('details')
+        details_container = driver.find_element(By.ID, 'details')
 
-        full_name = details_container.find_element_by_class_name('address').find_element_by_tag_name('h3').text.split(' ')
+        full_name = details_container.find_element(By.CLASS_NAME, 'address').find_element(By.TAG_NAME, 'h3').text.split(' ')
         first_name = full_name[0]
         last_name = full_name[2]
-        extras_array = details_container.find_element_by_class_name('extra').find_elements_by_class_name('dl-horizontal')
-        birthday = extras_array[5].find_element_by_tag_name('dd').text.strip()
-        age = extras_array[6].find_element_by_tag_name('dd').text.strip().split(' ')[0]
-        email = extras_array[8].find_element_by_tag_name('dd').text.strip().split('\n')[0]
-        username = extras_array[9].find_element_by_tag_name('dd').text.strip()
-        password = extras_array[10].find_element_by_tag_name('dd').text.strip()
+        extras_array = details_container.find_element(By.CLASS_NAME, 'extra').find_elements(By.CLASS_NAME, 'dl-horizontal')
+        birthday = extras_array[5].find_element(By.TAG_NAME, 'dd').text.strip()
+        age = extras_array[6].find_element(By.TAG_NAME, 'dd').text.strip().split(' ')[0]
+        email = extras_array[8].find_element(By.TAG_NAME, 'dd').text.strip().split('\n')[0]
+        username = extras_array[9].find_element(By.TAG_NAME, 'dd').text.strip()
+        password = extras_array[10].find_element(By.TAG_NAME, 'dd').text.strip()
         return Identity(first_name, last_name, "sex", birthday, age, email, username, password)
     except:
-        print "Error gathering identity.."
+        print("Error gathering identity..")
         time.sleep(2)
         getIdentity(driver)
-
-
 
 def saveIdentity(identity,i):
     workbook = open_workbook("identities.xls")
@@ -87,7 +92,7 @@ def getFirstOpenCell(sex):
         while worksheet.cell(i,0).value != 0:
             i += 1
     except:
-        print "Starting at cell: " + str(i)
+        print("Starting at cell: " + str(i))
     return i
 
 def print_total_identities_gathered(current_total):
@@ -102,10 +107,10 @@ def clearPrint():
 
 def main():
     sex = ['male','female']
-    sex = sex[1]
+    sex = sex[0]
     url = setSex(sex)
     start = getFirstOpenCell(sex)
-    driver = startDriver()
+    driver = startDriver(True)
     driver.get(url)
     count = 10
     for i in range(start,count):
